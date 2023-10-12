@@ -4,19 +4,122 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <stdio.h>
+#include <stdarg.h>
+
 int last_status = 0;
+
+
 void process_user_input(char *command);
 
+int my_strcmp(const char* str1, const char* str2) {
+    while (*str1 != '\0' || *str2 != '\0') {
+        if (*str1 != *str2) {
+            return (*str1 > *str2) ? 1 : -1;
+        }
+        str1++;
+        str2++;
+    }
+    return 0;
+}
 
+char* my_strchr(const char* str, int character) {
+    while (*str != '\0') {
+        if (*str == character) {
+            return (char*)str;
+        }
+        str++;
+    }
+    return NULL;
+}
+
+
+
+char* my_strtok(char* str, const char* delimiters) {
+    static char* nextToken = NULL;
+    char* token;
+    char* p;
+
+    if (str != NULL)
+        nextToken = str;
+
+    if (nextToken == NULL)
+        return NULL;
+
+    token = nextToken;
+
+    while (*nextToken && my_strchr(delimiters, *nextToken) != NULL) {
+        nextToken++;
+    }
+
+    for (p = nextToken; *p && my_strchr(delimiters, *p) == NULL; p++) {
+    }
+
+    if (*p) {
+        *p = '\0';
+        nextToken = p + 1;
+    } else {
+        nextToken = NULL;
+    }
+
+    return token;
+}
+
+char* my_strstr(const char* haystack, const char* needle) {
+    if (*needle == '\0') {
+        return (char*)haystack; /* If the needle is an empty string, return the haystack.*/
+    }
+
+    while (*haystack) {
+        const char* h = haystack;
+        const char* n = needle;
+
+        while (*h && *n && *h == *n) {
+            h++;
+            n++;
+        }
+
+        if (*n == '\0') {
+            return (char*)haystack; /* Found a match.*/
+        }
+
+        haystack++;
+    }
+
+    return NULL; /* If no match is found, return NULL.*/
+}
+
+#include <stdarg.h>
+
+int my_vprintf(const char *format, va_list args) {
+    char buffer[1024];
+    int len = vsnprintf(buffer, sizeof(buffer), format, args);
+
+    if (len >= 0) {
+        write(1, buffer, len);
+        return len;
+    } else {
+        return -1;
+    }
+}
+
+int my_printf(const char *format, ...) {
+    int result;
+    va_list args;
+    va_start(args, format);
+    result = my_vprintf(format, args);
+    va_end(args);
+    return result;
+}
 
 int my_print(char c)
 {
   return (write(1, &c, 1));
 }
 
-void shell_prompt() 
+void shell_prompt()
 {
-    if (isatty(STDIN_FILENO)) 
+    if (isatty(STDIN_FILENO))
     {
       int i;
       char prompt[] = "odec$ ";
@@ -29,7 +132,7 @@ void shell_prompt()
     }
 }
 
-void execute_command(char **args) 
+void execute_command(char **args)
 {
     char *path, *token;
     char executable_path[1024];
@@ -43,17 +146,17 @@ void execute_command(char **args)
         exit(EXIT_FAILURE);
     }
 
-    if (pid == 0) 
+    if (pid == 0)
     {
         execve(args[0], args, NULL);
 
         path = getenv("PATH");
-        token = strtok(path, ":");
-        while (token != NULL) 
+        token = my_strtok(path, ":");
+        while (token != NULL)
         {
             snprintf(executable_path, sizeof(executable_path), "%s/%s", token, args[0]);
             execve(executable_path, args, NULL);
-            token = strtok(NULL, ":");
+            token = my_strtok(NULL, ":");
         }
 
         perror("execve");
@@ -61,12 +164,12 @@ void execute_command(char **args)
     } else {
         waitpid(pid, &status, 0);
 
-        if (WIFEXITED(status)) 
+        if (WIFEXITED(status))
         {
             int exit_status = WEXITSTATUS(status);
             last_status = (exit_status == 0) ? 0 : 2;
-        } 
-        else 
+        }
+        else
         {
             last_status = 2;
         }
@@ -104,7 +207,7 @@ void handle_exit(char **args) {
 void handle_env() {
     char **env = __environ;
     while (*env != NULL) {
-        printf("%s\n", *env);
+        my_printf("%s\n", *env);
         env++;
     }
 }
@@ -125,9 +228,9 @@ void handle_comments(char *command)
 }
 
 void handle_special_commands(char **args) {
-    if (strcmp(args[0], "exit") == 0) {
+    if (my_strcmp(args[0], "exit") == 0) {
         handle_exit(args);
-    } else if (strcmp(args[0], "env") == 0) {
+    } else if (my_strcmp(args[0], "env") == 0) {
         handle_env();
     } else {
         execute_command(args);
@@ -162,7 +265,7 @@ void nullify_separator_positions(char *separator_pos, char *and_pos, char *or_po
     }
 }
 
-void process_user_input(char *command) 
+void process_user_input(char *command)
 {
     char *separator_pos, *and_pos, *or_pos;
     char *args[256], *token;
@@ -184,18 +287,18 @@ void process_user_input(char *command)
         return;
     }
 
-    separator_pos = strstr(command, " ; ");
-    and_pos = strstr(command, " && ");
-    or_pos = strstr(command, " || ");
+    separator_pos = my_strstr(command, " ; ");
+    and_pos = my_strstr(command, " && ");
+    or_pos = my_strstr(command, " || ");
 
     nullify_separator_positions(separator_pos, and_pos, or_pos);
 
-    token = strtok(command, " ");
+    token = my_strtok(command, " ");
 
     while (token != NULL)
       {
         args[i++] = token;
-        token = strtok(NULL, " ");
+        token = my_strtok(NULL, " ");
     }
     args[i] = NULL;
 
@@ -206,13 +309,13 @@ void process_user_input(char *command)
 
 void handle_status()
       {
-        printf("%d\n", last_status);
+        my_printf("%d\n", last_status);
       }
 void handle_pid()
 {
-  printf("%d\n", getpid());
+  my_printf("%d\n", getpid());
 }
-int main() 
+int main()
 {
     char *command;
 
@@ -220,11 +323,11 @@ int main()
       {
          shell_prompt();
         command = get_user_input();
-      if (strstr(command, "$?"))
+      if (my_strstr(command, "$?"))
       {
         handle_status();
       }
-      else if (strstr(command, "$$"))
+      else if (my_strstr(command, "$$"))
           {
             handle_pid();
           }
