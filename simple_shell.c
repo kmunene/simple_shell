@@ -7,7 +7,42 @@
 int last_status = 0;
 void process_entries(char *command);
 
+char *my_strtok(char *str, const char *delim) {
+    static char *nextToken = NULL;
+    char *start;
 
+    if (str) {
+        nextToken = str;
+    }
+
+    if (!nextToken) {
+        return NULL;
+    }
+
+    start = nextToken;
+
+    while (*nextToken != '\0') {
+        const char *d = delim;
+        while (*d != '\0') {
+            if (*nextToken == *d) {
+                *nextToken = '\0';
+                nextToken++;
+                if (*nextToken == '\0') {
+                    nextToken = NULL;
+                }
+                return start;
+            }
+            d++;
+        }
+        nextToken++;
+    }
+
+    if (start == nextToken) {
+        return NULL;
+    }
+
+    return start;
+}
 
 int my_print(char c)
 {
@@ -178,14 +213,14 @@ void execution(char **cmd_args)
         execve(cmd_args[0], cmd_args, NULL);
 
         env = my_getenv("PATH");
-        tok = strtok(env, ":");
+        tok = my_strtok(env, ":");
         while (tok != NULL) 
         {
             manual_strcpy(path, tok);  
             manual_strcat(path, "/");   
             manual_strcat(path, cmd_args[0]); 
             execve(path, cmd_args, NULL);
-            tok = strtok(NULL, ":");
+            tok = my_strtok(NULL, ":");
         }
         perror("./hsh");
         exit(2);
@@ -389,7 +424,7 @@ void process_entries(char *command)
 
     nullify_sep(sep_pos, and_pos, or_pos);
 
-    token = strtok(command, " ");
+    token = my_strtok(command, " ");
 
     while (token != NULL)
       {
