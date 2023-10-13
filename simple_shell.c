@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 int last_status = 0;
-void process_user_input(char *command);
+void process_entries(char *command);
 
 
 
@@ -28,34 +28,40 @@ void shell_prompt()
         fflush(stdout);
     }
 }
-int my_strcmp(const char* str1, const char* str2)
+
+int my_strcmp(const char* user_str, const char* cmp_str)
 {
-    while (*str1 != '\0' || *str2 != '\0')
+    while (*user_str != '\0' || *cmp_str != '\0')
       {
-        if (*str1 != *str2) 
+        if (*user_str != *cmp_str) 
         {
-            return (*str1 > *str2) ? 1 : -1;
+            return ((*user_str > *cmp_str) ? 1 : -1);
         }
-        str1++;
-        str2++;
+        user_str++;
+        cmp_str++;
     }
-    return 0;
+    return (0);
 }
 
-size_t my_strcspn(const char *str, const char *reject) {
-    const char *s, *r;
+
+size_t my_strcspn(const char *a_str, const char *m_str)
+{
+    const char *a, *m;
     size_t count = 0;
 
-    for (s = str; *s != '\0'; ++s) {
-        for (r = reject; *r != '\0'; ++r) {
-            if (*s == *r) {
-                return count;
+    for (a = a_str; *a != '\0'; ++a)
+      {
+        for (m = m_str; *m != '\0'; ++m)
+          {
+            if (*a == *m)
+            {
+                return (count);
             }
         }
         ++count;
     }
 
-    return count;
+    return (count);
 }
 
 char* my_strchr(const char* str, int character)
@@ -68,56 +74,98 @@ char* my_strchr(const char* str, int character)
         }
         str++;
     }
-    return NULL;
+    return (NULL);
 }
-char* my_strstr(const char* haystack, const char* needle) {
-    if (*needle == '\0') {
-        return (char*)haystack; /* If the needle is an empty string, return the haystack.*/
-    }
 
-    while (*haystack) {
-        const char* h = haystack;
-        const char* n = needle;
-
-        while (*h && *n && *h == *n) {
-            h++;
-            n++;
-        }
-
-        if (*n == '\0') {
-            return (char*)haystack; /* Found a match.*/
-        }
-
-        haystack++;
-    }
-
-    return NULL; /* If no match is found, return NULL.*/
-}
-void manual_strcpy(char *dest, const char *src) 
+char* my_strstr(const char* u_str, const char* s_str)
 {
-    while ((*dest++ = *src++))
+    const char *u, *s;
+  
+    if (*s_str == '\0') 
+    {
+        return ((char*)u_str); 
+    }
+
+    while (*u_str) 
+    {
+        u = u_str;
+        s = s_str;
+
+        while (*u && *s && *u == *s) 
+        {
+            u++;
+            s++;
+        }
+
+        if (*s == '\0')
+        {
+            return (char*)u_str; 
+        }
+
+        u_str++;
+    }
+
+    return (NULL);
+}
+
+void manual_strcpy(char *to, const char *from) 
+{
+    while ((*to++ = *from++))
       {
         ;
     }
 }
 
 
-void manual_strcat(char *dest, const char *src)
+void manual_strcat(char *to, const char *from)
 {
-    while (*dest)
+    while (*to)
       {
-        dest++;
+        to++;
     }
-    while ((*dest++ = *src++))
+    while ((*to++ = *from++))
       {
         ;
     }
 }
 
-void execute_command(char **args)
+char *my_getenv(const char *target_name)
 {
-    char executable_path[1024], *path, *token;
-    int status;
+    char *target_value, **env_list;
+    size_t i, target_length = 0;
+    const char *name_ptr = target_name;
+  
+    while (*name_ptr != '\0')
+    {
+        target_length++;
+        name_ptr++;
+    }
+
+    for (env_list = __environ; *env_list != NULL; env_list++)
+    {
+        target_value = *env_list;
+
+        for (i = 0; i < target_length; i++)
+        {
+            if (target_value[i] != target_name[i])
+            {
+                break;
+            }
+        }
+
+        if (i == target_length && target_value[target_length] == '=')
+        {
+            return (&target_value[target_length + 1]);
+        }
+    }
+
+    return (NULL);
+}
+
+void execution(char **cmd_args)
+{
+    char path[1024], *env, *tok;
+    int stat;
 
     pid_t pid = fork();
     if (pid == -1) 
@@ -127,42 +175,41 @@ void execute_command(char **args)
     }
     if (pid == 0) 
     {
-        execve(args[0], args, NULL);
+        execve(cmd_args[0], cmd_args, NULL);
 
-        path = getenv("PATH");
-        token = strtok(path, ":");
-        while (token != NULL) 
+        env = my_getenv("PATH");
+        tok = strtok(env, ":");
+        while (tok != NULL) 
         {
-            manual_strcpy(executable_path, token);  
-            manual_strcat(executable_path, "/");   
-            manual_strcat(executable_path, args[0]); 
-            execve(executable_path, args, NULL);
-            token = strtok(NULL, ":");
+            manual_strcpy(path, tok);  
+            manual_strcat(path, "/");   
+            manual_strcat(path, cmd_args[0]); 
+            execve(path, cmd_args, NULL);
+            tok = strtok(NULL, ":");
         }
-        perror("execve");
+        perror("./hsh");
         exit(2);
     } else
     {
-        waitpid(pid, &status, 0);
+        waitpid(pid, &stat, 0);
 
-        if (WIFEXITED(status))
+        if (WIFEXITED(stat))
         {
-            int exit_status = WEXITSTATUS(status);
-            last_status = (exit_status == 0) ? 0 : 2;
+            int exit_stat = WEXITSTATUS(stat);
+            last_status = (exit_stat == 0) ? 0 : 2;
         } else
         {
-          last_status = 2;
+            last_status = 2;
         }
     }
 }
 
-
-char* get_user_input() 
+char* user_entries() 
 {
-    char *command = NULL;
-    size_t bufsize = 0;
+    char *data = NULL;
+    size_t size = 0;
 
-    if (getline(&command, &bufsize, stdin) == -1)
+    if (getline(&data, &size, stdin) == -1)
     {
         if (feof(stdin))
         {
@@ -174,70 +221,85 @@ char* get_user_input()
         }
     }
 
-    command[my_strcspn(command, "\n")] = '\0';
-    return command;
+    data[my_strcspn(data, "\n")] = '\0';
+    return (data);
 }
 
-int my_atoi(const char *str) {
-    int result = 0;
+
+int my_atoi(const char *s)
+{
+    int res = 0;
     int sign = 1;
   
-    while (*str == ' ') {
-        str++;
+    while (*s == ' ')
+    {
+        s++;
     }
 
-    if (*str == '-' || *str == '+') {
-        if (*str == '-') {
+    if (*s == '-' || *s == '+') 
+    {
+        if (*s == '-') 
+        {
             sign = -1;
         }
-        str++;
+        s++;
     }
   
-    while (*str >= '0' && *str <= '9') {
-        result = result * 10 + (*str - '0');
-        str++;
+    while (*s >= '0' && *s <= '9') 
+    {
+        res = res * 10 + (*s - '0');
+        s++;
     }
 
-    return sign * result;
+    return (sign * res);
 }
 
-void handle_exit(char **args)
+
+void my_exit(char **cmds)
 {
-    if (args[1] != NULL) 
+    int exit_num;
+  
+    if (cmds[1] != NULL) 
     {
-        int exit_code = my_atoi(args[1]);
-      free(*args);
-        exit(exit_code);
+      exit_num = my_atoi(cmds[1]);
+      free(*cmds);
+      exit(exit_num);
     } else
     {
-        free(*args);
+        free(*cmds);
         exit(last_status);
 
     }
 }
 
-void my_print_str(const char *str) {
-    while (*str != '\0') {
-        my_print(*str);
-        str++;
+void my_print_str(const char *s)
+{
+    while (*s != '\0')
+    {
+        my_print(*s);
+        s++;
     }
 }
 
-void handle_env() {
+void my_env() 
+{
     char **env = __environ;
-    while (*env != NULL) {
+    while (*env != NULL) 
+    {
         my_print_str(*env);
         my_print('\n');
         env++;
     }
 }
 
-void handle_comments(char *command)
+void comments(char *command)
 {
     int k;
     char *comment_pos = NULL;
-    for (k = 0; command[k] != '\0'; k++) {
-        if (command[k] == ' ' && command[k+1] == '#') {
+    for (k = 0; command[k] != '\0'; k++) 
+    {
+        if (command[k] == ' ' && command[k+1] == '#')
+        {
             comment_pos = command + k + 1;
             break;
         }
@@ -249,43 +311,43 @@ void handle_comments(char *command)
     }
 }
 
-void handle_special_commands(char **args) 
+void special_cmds(char **cmd_args) 
 {
-    if (my_strcmp(args[0], "exit") == 0)
+    if (my_strcmp(cmd_args[0], "exit") == 0)
     {
-        handle_exit(args);
-    } else if (my_strcmp(args[0], "env") == 0)
+        my_exit(cmd_args);
+    } else if (my_strcmp(cmd_args[0], "env") == 0)
     {
-        handle_env();
+        my_env();
     } else 
     {
-        execute_command(args);
+        execution(cmd_args);
     }
 }
 
-void process_separator_conditions(char *separator_pos, char *and_pos, char *or_pos) 
+void sep_terms(char *sep_pos, char *and_pos, char *or_pos) 
 {
-    if (separator_pos != NULL)
+    if (sep_pos != NULL)
     {
-        process_user_input(separator_pos + 3);
+        process_entries(sep_pos + 3);
     }
 
     if (and_pos != NULL && last_status == 0)
     {
-        process_user_input(and_pos + 4);
+        process_entries(and_pos + 4);
     }
 
     if (or_pos != NULL && last_status != 0)
     {
-        process_user_input(or_pos + 3);
+        process_entries(or_pos + 3);
     }
 }
 
-void nullify_separator_positions(char *separator_pos, char *and_pos, char *or_pos) 
+void nullify_sep(char *sep_pos, char *and_pos, char *or_pos) 
 {
-    if (separator_pos != NULL)
+    if (sep_pos != NULL)
     {
-        *separator_pos = '\0';
+        *sep_pos = '\0';
     }
 
     if (and_pos != NULL) 
@@ -299,33 +361,33 @@ void nullify_separator_positions(char *separator_pos, char *and_pos, char *or_po
     }
 }
 
-void process_user_input(char *command) 
+void process_entries(char *command) 
 {
-    char *separator_pos, *and_pos, *or_pos;
+    char *sep_pos, *and_pos, *or_pos;
     char *args[256], *token;
-    int i = 0, j, contains_non_space = 0;
+    int i = 0, j, non_space = 0;
 
-    handle_comments(command);
+    comments(command);
 
     for (j = 0; command[j] != '\0'; j++)
       {
         if (command[j] != ' ')
         {
-            contains_non_space = 1;
+            non_space = 1;
             break;
         }
     }
 
-    if (!contains_non_space || command[0] == '#')
+    if (!non_space || command[0] == '#')
     {
         return;
     }
 
-    separator_pos = my_strstr(command, " ; ");
+    sep_pos = my_strstr(command, " ; ");
     and_pos = my_strstr(command, " && ");
     or_pos = my_strstr(command, " || ");
 
-    nullify_separator_positions(separator_pos, and_pos, or_pos);
+    nullify_sep(sep_pos, and_pos, or_pos);
 
     token = strtok(command, " ");
 
@@ -336,23 +398,25 @@ void process_user_input(char *command)
     }
     args[i] = NULL;
 
-    handle_special_commands(args);
-    process_separator_conditions(separator_pos, and_pos, or_pos);
+    special_cmds(args);
+    sep_terms(sep_pos, and_pos, or_pos);
 }
 
 
 void handle_status()
-      {
-        my_print('0' + last_status);
-        my_print('\n');
-      }
+{
+    my_print('0' + last_status);
+    my_print('\n');
+}
+
 void handle_pid() 
 {
     int pid = getpid();
     int numDigits = 0, i, *digits;
     int temp = pid;
 
-    while (temp > 0) {
+    while (temp > 0) 
+    {
         temp /= 10;
         numDigits++;
     }
@@ -361,12 +425,14 @@ void handle_pid()
 
     temp = pid; 
 
-    for ( i = numDigits - 1; i >= 0; i--) {
+    for ( i = numDigits - 1; i >= 0; i--)
+    {
         digits[i] = temp % 10;
         temp /= 10;
     }
 
-    for ( i = 0; i < numDigits; i++) {
+    for ( i = 0; i < numDigits; i++) 
+    {
         my_print('0' + digits[i]);
     }
     my_print('\n');
@@ -382,7 +448,7 @@ int main()
     while (1)
       {
          shell_prompt();
-        command = get_user_input();
+        command = user_entries();
       if (my_strstr(command, "$?"))
       {
         handle_status();
@@ -393,7 +459,7 @@ int main()
           }
       else
       {
-         process_user_input(command);
+         process_entries(command);
       }
        free(command);
     }
