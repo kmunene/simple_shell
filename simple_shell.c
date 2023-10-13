@@ -429,7 +429,7 @@ void process_entries(char *command)
     while (token != NULL)
       {
         args[i++] = token;
-        token = strtok(NULL, " ");
+        token = my_strtok(NULL, " ");
     }
     args[i] = NULL;
 
