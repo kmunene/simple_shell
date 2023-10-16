@@ -2,12 +2,13 @@
 /**
  * execution - Execute the command
  * @cmd_args: List of command arguments
+ * @context: last_status
  */
 
-void execution(char **cmd_args)
+void execution(char **cmd_args, Shell *context)
 {
 	char path[1024], *env, *tok;
-	int stat;
+	int stat, exit_stat;
 	pid_t pid = fork();
 
 	if (pid == -1)
@@ -30,6 +31,7 @@ void execution(char **cmd_args)
 			tok = my_strtok(NULL, ":");
 		}
 		perror("./hsh");
+		free(*cmd_args);
 		exit(2);
 	}
 	else
@@ -37,13 +39,13 @@ void execution(char **cmd_args)
 		waitpid(pid, &stat, 0);
 		if (WIFEXITED(stat))
 		{
-			int exit_stat = WEXITSTATUS(stat);
+			exit_stat = WEXITSTATUS(stat);
 
-			int last_status = (exit_stat == 0) ? 0 : 2;
+			context->last_status = (exit_stat == 0) ? 0 : 2;
 		}
 		else
 		{
-			last_status = 2;
+			context->last_status = 2;
 		}
 	}
 }
@@ -52,58 +54,57 @@ void execution(char **cmd_args)
 /**
  * my_exit - Exits the program
  * @cmds: Commands to process
+ * @context: last_status
  */
-void my_exit(char **cmds)
+void my_exit(char **cmds, Shell *context)
 {
-	int last_status = 0;
-        int exit_num;
+	int exit_num;
 
-        if (cmds[1] != NULL)
-        {
-                exit_num = my_atoi(cmds[1]);
-                free(*cmds);
-                exit(exit_num);
-        }
-        else
-        {
-                free(*cmds);
-                exit(last_status);
-        }
+	if (cmds[1] != NULL)
+	{
+		exit_num = my_atoi(cmds[1]);
+		free(*cmds);
+		exit(exit_num);
+	}
+	else
+	{
+		free(*cmds);
+		exit(context->last_status);
+	}
 }
 
 
 /**
  * sep_terms - Handle separator terms
- * @sep_pos: Pointer to the position of separator
- * @and_pos: Pointer to the position of 'and' separator
- * @or_pos: Pointer to the position of 'or' separator
+ * @sep: Pointer to the position of separator
+ * @and: Pointer to the position of 'and' separator
+ * @context: last_status
+ * @or: Pointer to the position of 'or' separator
  */
-void sep_terms(char *sep_pos, char *and_pos, char *or_pos)
+void sep_terms(char *sep, char *and, char *or, Shell *context)
 {
-	int last_status = 0;
-        if (sep_pos != NULL)
-        {
-                process_entries(sep_pos + 3);
-        }
+	if (sep != NULL)
+	{
+		process_entries(sep + 3, context);
+	}
 
-        if (and_pos != NULL && last_status == 0)
-        {
-                process_entries(and_pos + 4);
-        }
+	if (and != NULL && context == 0)
+	{
+		process_entries(and + 4, context);
+	}
 
-        if (or_pos != NULL && last_status != 0)
-        {
-                process_entries(or_pos + 3);
-        }
+	if (or != NULL && context != 0)
+	{
+		process_entries(or + 3, context);
+	}
 }
-
 
 /**
  * handle_status - Prints the last status
+ * @context: last_status
  */
-void handle_status(void)
+void handle_status(Shell *context)
 {
-	int last_status = 0;
-        my_print('0' + last_status);
-        my_print('\n');
+	my_print('0' + context->last_status);
+	my_print('\n');
 }

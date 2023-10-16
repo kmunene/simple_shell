@@ -3,9 +3,10 @@
 /**
  * process_entries - Process command entries
  * @command: Input command to process
+ * @context: last_status
  */
 
-void process_entries(char *command)
+void process_entries(char *command, Shell *context)
 {
 	char *sep_pos, *and_pos, *or_pos;
 	char *args[256], *token;
@@ -42,7 +43,7 @@ void process_entries(char *command)
 	}
 	args[i] = NULL;
 
-	special_cmds(args);
-	sep_terms(sep_pos, and_pos, or_pos);
+	special_cmds(args, context);
+	sep_terms(sep_pos, and_pos, or_pos, context);
 }
 

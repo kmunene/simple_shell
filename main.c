@@ -8,6 +8,7 @@
 int main(void)
 {
 	char *command;
+	Shell context = {0};
 
 	while (1)
 	{
@@ -15,7 +16,7 @@ int main(void)
 		command = user_entries();
 		if (my_strstr(command, "$?"))
 		{
-			handle_status();
+			handle_status(&context);
 		}
 		else if (my_strstr(command, "$$"))
 		{
@@ -23,7 +24,7 @@ int main(void)
 		}
 		else
 		{
-			process_entries(command);
+			process_entries(command, &context);
 		}
 		free(command);
 	}

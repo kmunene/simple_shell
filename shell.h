@@ -9,9 +9,14 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+typedef struct
+{
+    int last_status;
+} Shell;
+
 char *my_strtok(char *user_str, const char *delim);
 char *find_delim(char *lastToken, const char *delim);
-void process_entries(char *command);
+void process_entries(char *command, Shell *context);
 int my_print(char c);
 void shell_prompt(void);
 void manual_strcat(char *to, const char *from);
@@ -21,18 +26,17 @@ char *my_strchr(const char *str, int character);
 char *my_strstr(const char *u_str, const char *s_str);
 void manual_strcpy(char *to, const char *from);
 char *my_getenv(const char *target_name);
-void execution(char **cmd_args);
+void execution(char **cmd_args, Shell *context);
 char *user_entries(void);
 int my_atoi(const char *s);
-void my_exit(char **cmds);
+void my_exit(char **cmds, Shell *context);
 void my_print_str(const char *s);
 void my_env(void);
 void comments(char *command);
-void special_cmds(char **cmd_args);
-void sep_terms(char *sep_pos, char *and_pos, char *or_pos);
+void special_cmds(char **cmd_args,  Shell *context);
+void sep_terms(char *sep, char *and, char *or, Shell *context);
 void nullify_sep(char *sep_pos, char *and_pos, char *or_pos);
-void process_entries(char *command);
-void handle_status(void);
+void handle_status(Shell *context);
 void handle_pid(void);
 int main(void);
 
