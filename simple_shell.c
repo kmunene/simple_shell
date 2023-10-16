@@ -7,8 +7,6 @@
 int last_status = 0;
 void process_entries(char *command);
 
-
-
 int my_print(char c)
 {
   return (write(1, &c, 1));
@@ -62,19 +60,6 @@ size_t my_strcspn(const char *a_str, const char *m_str)
     }
 
     return (count);
-}
-
-char* my_strchr(const char* str, int character)
-{
-    while (*str != '\0')
-      {
-        if (*str == character) 
-        {
-            return (char*)str;
-        }
-        str++;
-    }
-    return (NULL);
 }
 
 char* my_strstr(const char* u_str, const char* s_str)
@@ -162,6 +147,58 @@ char *my_getenv(const char *target_name)
     return (NULL);
 }
 
+char *find_delim(char *lastToken, const char *delim)
+{
+    const char *d = delim;
+    while (*d != '\0' && *d != *lastToken) 
+    {
+        ++d;
+    }
+    return (char *)d;
+}
+
+char *my_strtok(char *user_str, const char *delim) 
+{
+    static char *lastToken = NULL;
+    char *d, *start;
+
+    if (user_str != NULL) 
+    {
+        lastToken = user_str;
+    }
+    if (lastToken == NULL) 
+    {
+        return NULL;
+    }
+    start = lastToken;
+    while (*lastToken != '\0') 
+    {
+        d = find_delim(lastToken, delim);
+        if (*d == '\0')
+        {
+            ++lastToken;
+        } else 
+        {
+            *lastToken = '\0';
+            ++lastToken;
+            if (start != lastToken - 1) 
+            {
+                return start;
+            } else 
+            {
+                start = lastToken;
+            }
+        }
+    }
+    if (start == lastToken) 
+    {
+        return NULL;
+    } else 
+    {
+        return start;
+    }
+}
+
 void execution(char **cmd_args)
 {
     char path[1024], *env, *tok;
@@ -178,16 +215,17 @@ void execution(char **cmd_args)
         execve(cmd_args[0], cmd_args, NULL);
 
         env = my_getenv("PATH");
-        tok = strtok(env, ":");
+        tok = my_strtok(env, ":");
         while (tok != NULL) 
         {
             manual_strcpy(path, tok);  
             manual_strcat(path, "/");   
             manual_strcat(path, cmd_args[0]); 
             execve(path, cmd_args, NULL);
-            tok = strtok(NULL, ":");
+            tok = my_strtok(NULL, ":");
         }
         perror("./hsh");
+        free(*cmd_args);
         exit(2);
     } else
     {
@@ -389,12 +427,12 @@ void process_entries(char *command)
 
     nullify_sep(sep_pos, and_pos, or_pos);
 
-    token = strtok(command, " ");
+    token = my_strtok(command, " ");
 
     while (token != NULL)
       {
         args[i++] = token;
-        token = strtok(NULL, " ");
+        token = my_strtok(NULL, " ");
     }
     args[i] = NULL;
 
