@@ -18,6 +18,7 @@ typedef struct Shell
 	int last_status;
 } Shell;
 
+void handle_input(char *command, Shell *context);
 char *my_strtok(char *user_str, const char *delim);
 char *find_delim(char *lastToken, const char *delim);
 void process_entries(char *command, Shell *context);
