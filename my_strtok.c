@@ -5,7 +5,6 @@
  * @delim: delimeter
  * Return: tokenized input
  */
-
 char *my_strtok(char *user_str, const char *delim)
 {
 	static char *lastToken;
