@@ -4,11 +4,14 @@
  */
 void shell_prompt(void)
 {
-	int i;
-	char prompt[] = "odec$ ";
-
-	for (i = 0; prompt[i] != '\0'; i++)
+	if (isatty(STDIN_FILENO) != 0)
 	{
-		my_print(prompt[i]);
+		int i;
+		char prompt[] = "odec$ ";
+
+		for (i = 0; prompt[i] != '\0'; i++)
+		{
+			my_print(prompt[i]);
+		}
 	}
 }

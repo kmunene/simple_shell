@@ -2,7 +2,7 @@
 /**
  * main - Entry point of the shell program
  *
- * Return: Always 0 on successful execution.
+ * Return: Always returns 0 to indicate successful execution
  */
 int main(void)
 {
@@ -11,28 +11,19 @@ int main(void)
 
 	while (1)
 	{
-		if (isatty(fileno(stdout)))
-		{
-			shell_prompt();
-		}
-
+		shell_prompt();
 		command = user_entries();
-
 		if (my_strstr(command, "$?"))
 		{
 			handle_status(&context);
-		}
-		else if (my_strstr(command, "$$"))
+		} else if (my_strstr(command, "$$"))
 		{
 			handle_pid();
-		}
-		else
+		} else
 		{
 			process_entries(command, &context);
 		}
-
 		free(command);
 	}
-
 	return (0);
 }
