@@ -37,3 +37,4 @@ char *user_entries(void)
 	data[my_strcspn(data, "\n")] = '\0';
 	return (data);
 }
+
