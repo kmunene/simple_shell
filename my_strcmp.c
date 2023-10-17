@@ -21,4 +21,3 @@ int my_strcmp(const char *user_str, const char *cmp_str)
 	}
 	return (0);
 }
-
