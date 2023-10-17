@@ -28,4 +28,3 @@ size_t my_strcspn(const char *a_str, const char *m_str)
 
 	return (count);
 }
-
