@@ -15,33 +15,18 @@ int main(void)
 		{
 			shell_prompt();
 			command = user_entries();
-			if (my_strstr(command, "$?"))
-			{
-				handle_status(&context);
-			} else if (my_strstr(command, "$$"))
-			{
-				handle_pid();
-			} else
-			{
-				process_entries(command, &context);
-			}
+			process_entries(command, &context);
 			free(command);
 		}
 	}
 	else
 	{
-		command = user_entries();
-		if (my_strstr(command, "$?"))
+		while (1)
 		{
-			handle_status(&context);
-		} else if (my_strstr(command, "$$"))
-		{
-			handle_pid();
-		} else
-		{
+			command = user_entries();
 			process_entries(command, &context);
+			free(command);
 		}
-		free(command);
 	}
 	return (0);
 }
