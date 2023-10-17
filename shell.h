@@ -9,9 +9,13 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-typedef struct
+/**
+ * struct Shell - Represents the shell context.
+ * @last_status: The exit status of the last command executed.
+ */
+typedef struct Shell
 {
-    int last_status;
+	int last_status;
 } Shell;
 
 char *my_strtok(char *user_str, const char *delim);
