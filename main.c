@@ -9,24 +9,28 @@ int main(void)
 	char *command;
 	Shell context = {0};
 
-	if (isatty(STDIN_FILENO))
+	while (1)
 	{
-		while (1)
+		if (isatty(fileno(stdout)))
 		{
 			shell_prompt();
-			command = user_entries();
-			process_entries(command, &context);
-			free(command);
 		}
-	}
-	else
-	{
-		while (1)
+
+		command = user_entries();
+
+		if (my_strstr(command, "$?"))
 		{
-			command = user_entries();
+			handle_status(&context);
+		} else if (my_strstr(command, "$$"))
+		{
+			handle_pid();
+		} else
+		{
 			process_entries(command, &context);
-			free(command);
 		}
+
+		free(command);
 	}
+
 	return (0);
 }
