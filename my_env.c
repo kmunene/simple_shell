@@ -13,4 +13,3 @@ void my_env(void)
 		env++;
 	}
 }
-
