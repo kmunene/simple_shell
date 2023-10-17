@@ -2,7 +2,7 @@
 /**
  * main - Entry point of the shell program
  *
- * Return: Always returns 0 to indicate successful execution
+ * Return: Always 0 on successful execution.
  */
 int main(void)
 {
@@ -21,10 +21,12 @@ int main(void)
 		if (my_strstr(command, "$?"))
 		{
 			handle_status(&context);
-		} else if (my_strstr(command, "$$"))
+		}
+		else if (my_strstr(command, "$$"))
 		{
 			handle_pid();
-		} else
+		}
+		else
 		{
 			process_entries(command, &context);
 		}
