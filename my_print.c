@@ -9,4 +9,3 @@ int my_print(char c)
 {
 	return (write(1, &c, 1));
 }
-
