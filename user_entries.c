@@ -24,10 +24,12 @@ char *user_entries(void)
 	{
 		if (feof(stdin))
 		{
+			free(data);
 			exit(EXIT_SUCCESS);
 		} else
 		{
 			perror("getline");
+			free(data);
 			exit(EXIT_FAILURE);
 		}
 	}
