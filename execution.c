@@ -21,7 +21,6 @@ void execution(char **cmd_args, Shell *context)
 		execve(cmd_args[0], cmd_args, NULL);
 		env = my_getenv("PATH");
 		tok = my_strtok(env, ":");
-
 		while (tok != NULL)
 		{
 			manual_strcpy(path, tok);
@@ -31,7 +30,6 @@ void execution(char **cmd_args, Shell *context)
 			tok = my_strtok(NULL, ":");
 		}
 		perror("./hsh");
-		free(*cmd_args);
 		exit(2);
 	}
 	else
@@ -40,7 +38,6 @@ void execution(char **cmd_args, Shell *context)
 		if (WIFEXITED(stat))
 		{
 			exit_stat = WEXITSTATUS(stat);
-
 			context->last_status = (exit_stat == 0) ? 0 : 2;
 		}
 		else
