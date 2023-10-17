@@ -12,4 +12,3 @@ void manual_strcpy(char *to, const char *from)
 		;
 	}
 }
-
